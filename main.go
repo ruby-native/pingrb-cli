@@ -20,13 +20,13 @@ const defaultHost = "https://pingrb.com"
 const usage = `pingrb sends a push notification to your phone.
 
 Usage:
-  pingrb config <token>    save your Custom source token from pingrb.com
-  pingrb config            print the saved token
+  pingrb configure <token>   save your pingrb token from pingrb.com
+  pingrb configure           print the saved token
   pingrb <title> [--body BODY] [--url URL]
-                           send a push
+                             send a push
 
 Examples:
-  pingrb config abc123def456...
+  pingrb configure abc123def456...
   pingrb "deploy failed"
   pingrb "job done" --body "backfill finished" --url https://example.com/jobs/42
 `
@@ -50,13 +50,13 @@ func run(args []string, stdout io.Writer) error {
 	case "-v", "--version":
 		fmt.Fprintln(stdout, "pingrb", version)
 		return nil
-	case "config":
-		return runConfig(args[1:], stdout)
+	case "configure":
+		return runConfigure(args[1:], stdout)
 	}
 	return runPing(args)
 }
 
-func runConfig(args []string, stdout io.Writer) error {
+func runConfigure(args []string, stdout io.Writer) error {
 	if len(args) == 0 {
 		token, err := readConfig()
 		if err != nil {
@@ -66,7 +66,7 @@ func runConfig(args []string, stdout io.Writer) error {
 		return nil
 	}
 	if len(args) > 1 {
-		return errors.New("config takes at most one token argument")
+		return errors.New("configure takes at most one token argument")
 	}
 	if err := writeConfig(args[0]); err != nil {
 		return err

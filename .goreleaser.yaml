@@ -27,3 +27,21 @@ checksum:
 release:
   draft: false
   prerelease: auto
+
+brews:
+  - repository:
+      owner: ruby-native
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: goreleaser-bot
+      email: bot@goreleaser.com
+    commit_msg_template: "Bump pingrb to {{ .Tag }}"
+    directory: Formula
+    homepage: https://pingrb.com
+    description: Send yourself a push notification from anything that can shell out
+    install: |
+      bin.install "pingrb"
+    test: |
+      assert_match "pingrb", shell_output("#{bin}/pingrb --version")
