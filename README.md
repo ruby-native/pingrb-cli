@@ -17,14 +17,13 @@ go install github.com/ruby-native/pingrb-cli@latest
 ## Usage
 
 ```sh
-pingrb config <your-token>
+pingrb configure <your-token>
 pingrb "deploy failed"
 pingrb "job done" --body "backfill finished" --url https://example.com/jobs/42
 some-long-job && pingrb "$?" --body "done"
 ```
 
-Get the token from your Custom source on https://pingrb.com (it's the last
-segment of the webhook URL).
+Get the token by adding a CLI source on https://pingrb.com.
 
 Config is stored at the platform's standard user config dir
 (`~/.config/pingrb` on Linux, `~/Library/Application Support/pingrb` on macOS).

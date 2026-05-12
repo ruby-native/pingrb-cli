@@ -21,15 +21,15 @@ func isolateConfig(t *testing.T) {
 
 const testToken = "abc123testtoken"
 
-func TestConfigRoundTrip(t *testing.T) {
+func TestConfigureRoundTrip(t *testing.T) {
 	isolateConfig(t)
 
-	if err := run([]string{"config", testToken}, io.Discard); err != nil {
+	if err := run([]string{"configure", testToken}, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 
 	var out bytes.Buffer
-	if err := run([]string{"config"}, &out); err != nil {
+	if err := run([]string{"configure"}, &out); err != nil {
 		t.Fatal(err)
 	}
 	if got := strings.TrimSpace(out.String()); got != testToken {
@@ -37,19 +37,19 @@ func TestConfigRoundTrip(t *testing.T) {
 	}
 }
 
-func TestConfigRejectsURL(t *testing.T) {
+func TestConfigureRejectsURL(t *testing.T) {
 	isolateConfig(t)
 
-	err := run([]string{"config", "https://pingrb.com/webhooks/custom/abc123"}, io.Discard)
+	err := run([]string{"configure", "https://pingrb.com/webhooks/custom/abc123"}, io.Discard)
 	if err == nil || !strings.Contains(err.Error(), "expected a token") {
 		t.Errorf("got %v", err)
 	}
 }
 
-func TestConfigRejectsEmpty(t *testing.T) {
+func TestConfigureRejectsEmpty(t *testing.T) {
 	isolateConfig(t)
 
-	err := run([]string{"config", "   "}, io.Discard)
+	err := run([]string{"configure", "   "}, io.Discard)
 	if err == nil || !strings.Contains(err.Error(), "empty") {
 		t.Errorf("got %v", err)
 	}
@@ -102,7 +102,7 @@ func TestPingPostsJSON(t *testing.T) {
 	defer srv.Close()
 	t.Setenv("PINGRB_HOST", srv.URL)
 
-	if err := run([]string{"config", testToken}, io.Discard); err != nil {
+	if err := run([]string{"configure", testToken}, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 	if err := run([]string{"job done", "--body", "backfill finished", "--url", "https://example.com/jobs/42"}, io.Discard); err != nil {
@@ -111,7 +111,7 @@ func TestPingPostsJSON(t *testing.T) {
 	if got.Title != "job done" || got.Body != "backfill finished" || got.URL != "https://example.com/jobs/42" {
 		t.Errorf("got %+v", got)
 	}
-	if want := "/webhooks/custom/" + testToken; gotPath != want {
+	if want := "/webhooks/cli/" + testToken; gotPath != want {
 		t.Errorf("path = %q, want %q", gotPath, want)
 	}
 }
@@ -127,7 +127,7 @@ func TestPingOmitsEmptyFields(t *testing.T) {
 	defer srv.Close()
 	t.Setenv("PINGRB_HOST", srv.URL)
 
-	if err := run([]string{"config", testToken}, io.Discard); err != nil {
+	if err := run([]string{"configure", testToken}, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 	if err := run([]string{"deploy failed"}, io.Discard); err != nil {
@@ -151,7 +151,7 @@ func TestPingErrorsOnNon2xx(t *testing.T) {
 	defer srv.Close()
 	t.Setenv("PINGRB_HOST", srv.URL)
 
-	if err := run([]string{"config", testToken}, io.Discard); err != nil {
+	if err := run([]string{"configure", testToken}, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 	err := run([]string{"deploy failed"}, io.Discard)

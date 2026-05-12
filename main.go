@@ -112,16 +112,16 @@ func readConfig() (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", errors.New("not configured. Run `pingrb config <token>`.")
+			return "", errors.New("not configured. Run `pingrb configure <token>`.")
 		}
 		return "", err
 	}
 	token := strings.TrimSpace(string(data))
 	if token == "" {
-		return "", errors.New("config is empty. Run `pingrb config <token>`.")
+		return "", errors.New("config is empty. Run `pingrb configure <token>`.")
 	}
 	if strings.ContainsAny(token, "/ \t") {
-		return "", errors.New("config looks like a URL (pre-0.2.0 format). Re-run `pingrb config <token>` with just the token.")
+		return "", errors.New("config looks like a URL (pre-0.2.0 format). Re-run `pingrb configure <token>` with just the token.")
 	}
 	return token, nil
 }
@@ -132,7 +132,7 @@ func writeConfig(input string) error {
 		return errors.New("token cannot be empty")
 	}
 	if strings.ContainsAny(token, "/ \t") {
-		return errors.New("expected a token, not a URL or path. Copy the 32-character token from your Custom source on pingrb.com.")
+		return errors.New("expected a token, not a URL or path. Copy the token from your CLI source on pingrb.com.")
 	}
 
 	path, err := configPath()
@@ -163,7 +163,7 @@ func sendPing(token, title, body, url string) error {
 	if err != nil {
 		return err
 	}
-	endpoint := host() + "/webhooks/custom/" + token
+	endpoint := host() + "/webhooks/cli/" + token
 	resp, err := http.Post(endpoint, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return err
