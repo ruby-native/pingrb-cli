@@ -4,9 +4,11 @@ Send yourself a push notification from anything that can shell out.
 
 ## Install
 
-Coming soon via Homebrew tap.
+```sh
+brew install ruby-native/tap/pingrb
+```
 
-For now, build from source:
+Or build from source:
 
 ```sh
 go install github.com/ruby-native/pingrb-cli@latest
