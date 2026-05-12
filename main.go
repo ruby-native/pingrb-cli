@@ -15,16 +15,18 @@ import (
 
 var version = "dev"
 
+const defaultHost = "https://pingrb.com"
+
 const usage = `pingrb sends a push notification to your phone.
 
 Usage:
-  pingrb config <url>    set the webhook URL from your pingrb Custom source
-  pingrb config          print the configured URL
+  pingrb config <token>    save your Custom source token from pingrb.com
+  pingrb config            print the saved token
   pingrb <title> [--body BODY] [--url URL]
-                         send a push
+                           send a push
 
 Examples:
-  pingrb config https://pingrb.com/webhooks/custom/abc123
+  pingrb config abc123def456...
   pingrb "deploy failed"
   pingrb "job done" --body "backfill finished" --url https://example.com/jobs/42
 `
@@ -56,15 +58,15 @@ func run(args []string, stdout io.Writer) error {
 
 func runConfig(args []string, stdout io.Writer) error {
 	if len(args) == 0 {
-		url, err := readConfig()
+		token, err := readConfig()
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(stdout, url)
+		fmt.Fprintln(stdout, token)
 		return nil
 	}
 	if len(args) > 1 {
-		return errors.New("config takes at most one URL argument")
+		return errors.New("config takes at most one token argument")
 	}
 	if err := writeConfig(args[0]); err != nil {
 		return err
@@ -87,11 +89,11 @@ func runPing(args []string) error {
 		return err
 	}
 
-	endpoint, err := readConfig()
+	token, err := readConfig()
 	if err != nil {
 		return err
 	}
-	return sendPing(endpoint, title, *body, *url)
+	return sendPing(token, title, *body, *url)
 }
 
 func configPath() (string, error) {
@@ -110,18 +112,29 @@ func readConfig() (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", errors.New("not configured. Run `pingrb config <url>`.")
+			return "", errors.New("not configured. Run `pingrb config <token>`.")
 		}
 		return "", err
 	}
-	url := strings.TrimSpace(string(data))
-	if url == "" {
-		return "", errors.New("config is empty. Run `pingrb config <url>`.")
+	token := strings.TrimSpace(string(data))
+	if token == "" {
+		return "", errors.New("config is empty. Run `pingrb config <token>`.")
 	}
-	return url, nil
+	if strings.ContainsAny(token, "/ \t") {
+		return "", errors.New("config looks like a URL (pre-0.2.0 format). Re-run `pingrb config <token>` with just the token.")
+	}
+	return token, nil
 }
 
-func writeConfig(url string) error {
+func writeConfig(input string) error {
+	token := strings.TrimSpace(input)
+	if token == "" {
+		return errors.New("token cannot be empty")
+	}
+	if strings.ContainsAny(token, "/ \t") {
+		return errors.New("expected a token, not a URL or path. Copy the 32-character token from your Custom source on pingrb.com.")
+	}
+
 	path, err := configPath()
 	if err != nil {
 		return err
@@ -129,7 +142,14 @@ func writeConfig(url string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(path, []byte(url+"\n"), 0o600)
+	return os.WriteFile(path, []byte(token+"\n"), 0o600)
+}
+
+func host() string {
+	if v := strings.TrimSpace(os.Getenv("PINGRB_HOST")); v != "" {
+		return strings.TrimRight(v, "/")
+	}
+	return defaultHost
 }
 
 type pingPayload struct {
@@ -138,11 +158,12 @@ type pingPayload struct {
 	URL   string `json:"url,omitempty"`
 }
 
-func sendPing(endpoint, title, body, url string) error {
+func sendPing(token, title, body, url string) error {
 	data, err := json.Marshal(pingPayload{Title: title, Body: body, URL: url})
 	if err != nil {
 		return err
 	}
+	endpoint := host() + "/webhooks/custom/" + token
 	resp, err := http.Post(endpoint, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return err

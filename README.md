@@ -17,16 +17,20 @@ go install github.com/ruby-native/pingrb-cli@latest
 ## Usage
 
 ```sh
-pingrb config https://pingrb.com/webhooks/custom/<your-token>
+pingrb config <your-token>
 pingrb "deploy failed"
 pingrb "job done" --body "backfill finished" --url https://example.com/jobs/42
 some-long-job && pingrb "$?" --body "done"
 ```
 
-The webhook URL is the Custom source URL from your account at https://pingrb.com.
+Get the token from your Custom source on https://pingrb.com (it's the last
+segment of the webhook URL).
 
 Config is stored at the platform's standard user config dir
 (`~/.config/pingrb` on Linux, `~/Library/Application Support/pingrb` on macOS).
+
+Set `PINGRB_HOST` to point at a non-production instance (defaults to
+`https://pingrb.com`).
 
 ## Develop
 
